@@ -12,11 +12,15 @@ MAX_EVENT_SIZE = 1024 * 1024 # 1 MiB max
 
 ECS_FIELDS = {
     "timestamp": "@timestamp",
+    "user_agent": "user_agent.original",
     "source_ip": "source.ip",
     "source_port": "source.port",
     "destination_ip": "destination.ip",
     "destination_port": "destination.port",
     "http_request_method": "http.request.method",
+    "http_request_body": "http.request.body.content",
+    "http_response_status_code": "http.response.status_code",
+    "http_response_body": "http.response.body.content",
     "custom": "custom"
 }
 

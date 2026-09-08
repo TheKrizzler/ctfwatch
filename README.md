@@ -40,11 +40,12 @@ import ctfwatch
 
 ctfwatch.log(
     source_ip="8.8.8.8",
-    request_useragent="Claude/Chrome(1.2.2) ...",
-    request_content="{\"username\":\"admin\", \"password\":\"123\"}",
-    response_statuscode="HTTP/2 200 OK",
-    response_content="{\"result\":\"success\"}",
-    custom={"challenge_solved": True}
+    user_agent="Claude/Chrome(1.2.2) ...",
+    http_request_method="POST",
+    http_request_body="{\"username\":\"admin\", \"password\":\"123\"}",
+    http_response_status_code="HTTP/2 200 OK",
+    http_response_body="{\"result\":\"success\"}",
+    custom={"flag_printed": True}
 )
 ```
 
