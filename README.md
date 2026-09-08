@@ -4,6 +4,8 @@ A logging pipeline and AI detection system designed for seamless integration wit
 
 The project consists of 3 central parts: the central server, the agent, and a python logging wrapper.
 
+![illustration](./illustration.png)
+
 ## Server
 
 This central component is a containerized Python Flask server which handles forwarded logs from the agents. These logs are already parsed and delivered as ECS. The server only accepts incoming API requests which are authenticated with a token only agents know.
