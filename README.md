@@ -18,7 +18,7 @@ $ ./setup.sh
 
 ## Agent
 
-One agent runs on each host and retrieves logs from all logging challenges. Communication from server to agent goes over TCP through the docker network 'ctfwatch' on port 9494. 
+One agent runs on each host and retrieves logs from all logging challenges. Communication from logger to agent goes over TCP through the docker network 'ctfwatch-net' on port 9494. 
 
 Setup:
 ```sh

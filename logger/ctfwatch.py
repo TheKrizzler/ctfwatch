@@ -56,6 +56,7 @@ class Logger():
             return
 
         packed_data = struct.pack(">I", len(data)) + data # no, a single log entry cannot be longer than 2**32 bytes
+        debug(f"Attempting to send packed data: {packed_data}")
 
         with self.lock:
             try:
