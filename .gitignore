@@ -1,3 +1,29 @@
-.vscode
+# Build output
+agent/build/
+*.o
+*.a
+*.so
+
+# Compiled binaries
+ctfwatch-agent
+
+# Crash dumps
+*.core
+core
+
+# Editor/OS junk
+.vscode/
+.idea/
+.DS_Store
+*~
+
+# Python
+__pycache__/
+*/__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Secrets / local config
 .env
-.venv
+*.env
