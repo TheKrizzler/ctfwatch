@@ -5,9 +5,10 @@ import socket
 import json
 import time
 
+DEBUG = False
+
 CTFWATCH_AGENT_IP = "ctfwatch"
 CTFWATCH_AGENT_PORT = 9494
-DEBUG = False
 MAX_EVENT_SIZE = 1024 * 1024 # 1 MiB max
 
 ECS_FIELDS = {
@@ -45,7 +46,7 @@ class Logger():
         if self.sock is None:
             self.sock = socket.create_connection(
                 (CTFWATCH_AGENT_IP, CTFWATCH_AGENT_PORT),
-                timeout=2
+                timeout=10
             )
 
     def send_event(self, event):

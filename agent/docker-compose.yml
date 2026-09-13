@@ -1,0 +1,13 @@
+services:
+  agent:
+    build: .
+    networks:
+      ctfwatch-net:
+        aliases:
+          - ctfwatch
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+networks:
+  ctfwatch-net:
+    external: true

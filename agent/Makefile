@@ -4,11 +4,12 @@ CFLAGS = -Wall -Wextra -DLOG_USE_COLOR -fPIE \
          -Iinclude \
          -Ivendor/log \
          -Ivendor/cjson
-LDFLAGS = -pthread -pie
+LDFLAGS = -lcurl -lz -pthread -pie
 
 SRC = src/main.c \
       src/protocol.c \
       src/profile.c \
+      src/docker.c \
       vendor/log/log.c \
       vendor/cjson/cJSON.c
 

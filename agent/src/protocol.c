@@ -10,8 +10,7 @@
 #include "profile.h"
 
 // receive exactly len bytes 
-static int recv_bytes(int fd, void *buf, size_t len)
-{
+static int recv_bytes(int fd, void *buf, size_t len) {
     size_t received = 0;
 
     while (received < len) {
@@ -31,11 +30,36 @@ static int recv_bytes(int fd, void *buf, size_t len)
     return 0;
 }
 
+static void log_connection(const container_profile_t* profile) {
+    char ip[INET6_ADDRSTRLEN];
+
+    inet_ntop(
+        AF_INET,
+        &((struct sockaddr_in *)&profile->ip_addr)->sin_addr,
+        ip,
+        sizeof(ip)
+    );
+
+    log_info("Established incoming connection from %s (id: %s, name: %s)", ip, profile->container_id, profile->container_name);
+}
+
 int new_protocol_socket(void) {
     int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (socket_fd < 0) {
         log_fatal("Could not establish socket! Exiting...\n");
         exit(EXIT_FAILURE);
+    }
+
+    int yes = 1;
+
+    if (setsockopt(
+            socket_fd,
+            SOL_SOCKET,
+            SO_REUSEADDR,
+            &yes,
+            sizeof(yes)
+        ) < 0) {
+        log_warn("Could not set SO_REUSEADDR");
     }
 
     struct sockaddr_in addr = {
@@ -68,9 +92,12 @@ void *protocol_worker(void *args) {
     free(args);
 
     // build profile
-    // code will go here
+    container_profile_t *profile = profile_build(
+        &w_args.peer_addr,
+        w_args.peer_addr_len
+    );
 
-    log_info("Established new incoming connection with 127.0.0.1...");
+    log_connection(profile);
 
     // communication
     for (;;) {
@@ -107,9 +134,13 @@ void *protocol_worker(void *args) {
         }
 
         // aggregation code (jsonify, enrich, compress)
-        // will transfer ownership of event_content and be responsible for sending to queue
-    }
+        
 
+        send(w_args.connection_fd, PROTOCOL_RES_OK, PROTOCOL_RES_LEN, 0);        
+    }
+    
+
+    profile_destroy(profile);
     close(w_args.connection_fd);
 
     return NULL;
