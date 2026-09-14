@@ -6,6 +6,7 @@ services:
         aliases:
           - ctfwatch
     volumes:
+      - ./config.json:/etc/ctfwatch/config.json:ro
       - /var/run/docker.sock:/var/run/docker.sock
 
 networks:

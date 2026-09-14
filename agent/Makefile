@@ -10,6 +10,12 @@ SRC = src/main.c \
       src/protocol.c \
       src/profile.c \
       src/docker.c \
+      src/event.c \
+      src/queue.c \
+      src/forwarder.c \
+      src/compress.c \
+      src/server.c \
+      src/config.c \
       vendor/log/log.c \
       vendor/cjson/cJSON.c
 

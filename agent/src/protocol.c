@@ -8,6 +8,7 @@
 #include "log.h"
 #include "protocol.h"
 #include "profile.h"
+#include "event.h"
 
 // receive exactly len bytes 
 static int recv_bytes(int fd, void *buf, size_t len) {
@@ -97,6 +98,12 @@ void *protocol_worker(void *args) {
         w_args.peer_addr_len
     );
 
+    if (!profile) {
+        log_warn("Could not build container profile. Killing connection...");
+        close(w_args.connection_fd);
+        return NULL;
+    }
+
     log_connection(profile);
 
     // communication
@@ -133,12 +140,42 @@ void *protocol_worker(void *args) {
             break;
         }
 
-        // aggregation code (jsonify, enrich, compress)
-        
+        // aggregation
+        size_t enriched_size;
+
+        char *enriched = event_enrich(
+            event_content,
+            event_size,
+            profile,
+            &enriched_size
+        );
+
+        free(event_content);
+
+        if (!enriched) {
+            log_warn("Failed to parse/enrich event");
+            break;
+        }
+
+        event_t *event = malloc(sizeof(*event));
+
+        if (!event) {
+            log_warn("Failed to allocate event");
+            free(enriched);
+            break;
+        }
+
+        event->data = enriched;
+        event->size = enriched_size;
+
+        if (queue_push(w_args.queue, event) < 0) {
+            log_warn("Failed to queue event");
+            event_destroy(event);
+            break;
+        }
 
         send(w_args.connection_fd, PROTOCOL_RES_OK, PROTOCOL_RES_LEN, 0);        
     }
-    
 
     profile_destroy(profile);
     close(w_args.connection_fd);
