@@ -27,3 +27,10 @@ venv/
 # Secrets / local config
 .env
 *.env
+
+# Python packaging
+build/
+dist/
+*.egg-info/
+__pycache__/
+*.py[cod]

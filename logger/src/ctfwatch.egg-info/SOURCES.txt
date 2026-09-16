@@ -1,8 +1,0 @@
-pyproject.toml
-src/ctfwatch/__init__.py
-src/ctfwatch/logger.py
-src/ctfwatch.egg-info/PKG-INFO
-src/ctfwatch.egg-info/SOURCES.txt
-src/ctfwatch.egg-info/dependency_links.txt
-src/ctfwatch.egg-info/requires.txt
-src/ctfwatch.egg-info/top_level.txt
