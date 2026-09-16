@@ -1,4 +1,4 @@
 {
-    "server_url":"https://webhook.site/43336588-1cb9-441e-8928-97995005a4fb",
-    "token":"skjera"
+    "server_url":"http://host.docker.internal:8000/api/v1/logs/ingest",
+    "token":"TEST_TOKEN"
 }
