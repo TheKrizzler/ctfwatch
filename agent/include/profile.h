@@ -3,6 +3,8 @@
 
 #include <sys/socket.h>
 
+typedef struct cJSON cJSON;
+
 typedef struct container_profile {
     // essential fields
     struct sockaddr_storage ip_addr;
@@ -21,6 +23,8 @@ container_profile_t *profile_build(
     const struct sockaddr_storage *peer_addr,
     socklen_t peer_addr_len
 );
+
+container_profile_t *profile_build_from_container(const cJSON *container);
 
 void profile_destroy(container_profile_t *profile);
 

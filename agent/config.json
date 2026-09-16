@@ -1,4 +1,4 @@
 {
-    "server_url":"http://host.docker.internal:8000/api/v1/logs/ingest",
+    "server_url":"http://fuckweb.lol:8000/api/v1/logs/ingest",
     "token":"TEST_TOKEN"
 }

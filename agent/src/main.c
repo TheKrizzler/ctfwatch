@@ -8,6 +8,7 @@
 #include "queue.h"
 #include "forwarder.h"
 #include "config.h"
+#include "docker_monitor.h"
 
 int main(int argc, char *argv[]) {
     agent_config_t *config = config_load();
@@ -52,6 +53,14 @@ int main(int argc, char *argv[]) {
             &forwarder_args
         ) != 0) {
         log_fatal("Could not start forwarder thread");
+        queue_destroy(&queue);
+        config_destroy(config);
+        return EXIT_FAILURE;
+    }
+
+    pthread_t docker_monitor_thread;
+    if (docker_monitor_start(&queue, &docker_monitor_thread) != 0) {
+        log_fatal("Could not start Docker log monitor");
         queue_destroy(&queue);
         config_destroy(config);
         return EXIT_FAILURE;

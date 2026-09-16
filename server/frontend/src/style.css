@@ -73,8 +73,9 @@ button:hover {
 .event {
     display: grid;
     grid-template-columns:
-        130px
-        minmax(200px, 1fr)
+        120px
+        minmax(220px, 1.4fr)
+        minmax(120px, 0.7fr)
         minmax(150px, 1fr)
         minmax(150px, 1fr);
 

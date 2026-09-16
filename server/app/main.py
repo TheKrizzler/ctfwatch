@@ -4,7 +4,9 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
+from fastapi import Depends
 
+from .auth import authenticate_agent
 from .db import get_connection, init_db
 from .events import router as events_router
 
@@ -27,7 +29,10 @@ def health():
 
 
 @app.post("/api/v1/logs/ingest")
-async def ingest_logs(request: Request):
+async def ingest_logs(
+    request: Request,
+    agent=Depends(authenticate_agent),
+):
     body = await request.body()
 
     if request.headers.get("content-encoding") == "gzip":
@@ -66,7 +71,7 @@ async def ingest_logs(request: Request):
                 VALUES (%s, %s)
                 """,
                 [
-                    ("development", json.dumps(event))
+                    (agent["id"], json.dumps(event))
                     for event in events
                 ]
             )

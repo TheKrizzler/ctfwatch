@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 export default function App() {
     const [events, setEvents] = useState([]);
     const [query, setQuery] = useState("");
+    const [container, setContainer] = useState("");
     const [minutes, setMinutes] = useState(30);
     const [selected, setSelected] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -18,6 +19,9 @@ export default function App() {
         if (query)
             params.set("q", query);
 
+        if (container)
+            params.set("container", container);
+
         try {
             const response = await fetch(
                 `/api/v1/events?${params}`
@@ -32,11 +36,34 @@ export default function App() {
 
     useEffect(() => {
         loadEvents();
-    }, [minutes]);
+    }, [minutes, container]);
 
     function submit(event) {
         event.preventDefault();
         loadEvents();
+    }
+
+    const containers = [
+        ...new Set(
+            events
+                .map(e => e.data.ctfwatch?.container?.name)
+                .filter(Boolean)
+        )
+    ];
+
+    function summary(data) {
+        const method = data.http?.request?.method;
+
+        if (method)
+            return method;
+
+        if (data.event?.action)
+            return data.event.action;
+
+        if (data.message)
+            return data.message;
+
+        return "—";
     }
 
     return (
@@ -61,6 +88,19 @@ export default function App() {
                 />
 
                 <select
+                    value={container}
+                    onChange={e => setContainer(e.target.value)}
+                >
+                    <option value="">All containers</option>
+
+                    {containers.map(name => (
+                        <option key={name} value={name}>
+                            {name}
+                        </option>
+                    ))}
+                </select>
+
+                <select
                     value={minutes}
                     onChange={e => setMinutes(Number(e.target.value))}
                 >
@@ -81,13 +121,14 @@ export default function App() {
                 <div className="event event-header">
                     <span>Time</span>
                     <span>Container</span>
+                    <span>Event</span>
                     <span>Source</span>
                     <span>Destination</span>
                 </div>
 
                 {events.map(event => {
                     const data = event.data;
-                    const container =
+                    const containerName =
                         data.ctfwatch?.container?.name ?? "—";
 
                     return (
@@ -108,24 +149,15 @@ export default function App() {
                                     ).toLocaleTimeString()}
                                 </span>
 
-                                <span>{container}</span>
-
-                                <span>
-                                    {data.source?.ip ?? "—"}
-                                </span>
-
-                                <span>
-                                    {data.destination?.ip ?? "—"}
-                                </span>
+                                <span>{containerName}</span>
+                                <span>{summary(data)}</span>
+                                <span>{data.source?.ip ?? "—"}</span>
+                                <span>{data.destination?.ip ?? "—"}</span>
                             </div>
 
                             {selected === event.id && (
                                 <pre>
-                                    {JSON.stringify(
-                                        data,
-                                        null,
-                                        2
-                                    )}
+                                    {JSON.stringify(data, null, 2)}
                                 </pre>
                             )}
                         </div>

@@ -8,10 +8,8 @@
 #include "profile.h"
 #include "docker.h"
 
-container_profile_t *profile_build(const struct sockaddr_storage *peer_addr, socklen_t peer_addr_len) {
+container_profile_t *profile_build_from_container(const cJSON *container) {
     container_profile_t *profile = NULL;
-    char *docker_info = NULL;
-    cJSON *root = NULL;
 
     profile = calloc(1, sizeof(*profile)); // all NULL    
     
@@ -20,79 +18,12 @@ container_profile_t *profile_build(const struct sockaddr_storage *peer_addr, soc
         return NULL;
     }
 
-    profile->ip_addr = *peer_addr;
-    profile->ip_addr_len = peer_addr_len;
-
-    docker_info = get_docker_info();
-
-    if (!docker_info) {
-        log_error("Could not retrieve Docker info");
-        goto fail;
-    }
-
-    root = cJSON_Parse(docker_info);
-
-    free(docker_info);
-    docker_info = NULL;
-
-    if (!root) {
-        log_error("Failed to parse Docker response");
-        goto fail;
-    }
-
-    if (!cJSON_IsArray(root)) {
-        log_error("Docker response is not an array");
-        goto fail;
-    }
-
-    // ip string representation
-    char ip_string[INET6_ADDRSTRLEN];
-
-    if (!inet_ntop(
-            AF_INET,
-            &((const struct sockaddr_in *)&profile->ip_addr)->sin_addr,
-            ip_string,
-            sizeof(ip_string)
-        )) {
-        log_error("Could not convert peer IP address.");
-        goto fail;
-    }
-
-    // find the correct container
-    cJSON *container;
-    cJSON *matched_container = NULL;
-
-    cJSON_ArrayForEach(container, root) {
-        cJSON *network_settings =
-            cJSON_GetObjectItem(container, "NetworkSettings");
-
-        cJSON *networks =
-            cJSON_GetObjectItem(network_settings, "Networks");
-
-        cJSON *ctfwatch_network =
-            cJSON_GetObjectItem(networks, "ctfwatch-net");
-
-        cJSON *ip =
-            cJSON_GetObjectItem(ctfwatch_network, "IPAddress");
-        
-        if (cJSON_IsString(ip) && strcmp(ip->valuestring, ip_string) == 0) {
-            matched_container = container;
-            break;
-        }
-    }
-
-    if (!matched_container) {
-        log_warn("Could not map %s to a container", ip_string);
-        goto fail;
-    }
-
-    // get important stuff
-    cJSON *id = cJSON_GetObjectItem(matched_container, "Id");
-    cJSON *names = cJSON_GetObjectItem(matched_container, "Names");
+    cJSON *id = cJSON_GetObjectItem(container, "Id");
+    cJSON *names = cJSON_GetObjectItem(container, "Names");
     cJSON *name = cJSON_GetArrayItem(names, 0);
-    cJSON *image = cJSON_GetObjectItem(matched_container, "Image");
+    cJSON *image = cJSON_GetObjectItem(container, "Image");
 
-    cJSON *labels = cJSON_GetObjectItem(matched_container, "Labels");
+    cJSON *labels = cJSON_GetObjectItem(container, "Labels");
     cJSON *compose_project = cJSON_GetObjectItem(labels, "com.docker.compose.project");
     cJSON *compose_service = cJSON_GetObjectItem(labels, "com.docker.compose.service");
 
@@ -122,14 +53,69 @@ container_profile_t *profile_build(const struct sockaddr_storage *peer_addr, soc
         goto fail;
     }
 
-    cJSON_Delete(root);
     return profile;
 
 fail:
-    free(docker_info);
-    cJSON_Delete(root);
     profile_destroy(profile);
     return NULL;
+}
+
+container_profile_t *profile_build(const struct sockaddr_storage *peer_addr, socklen_t peer_addr_len) {
+    char *docker_info = get_docker_info();
+    cJSON *root = NULL;
+    container_profile_t *profile = NULL;
+
+    if (!docker_info) {
+        log_error("Could not retrieve Docker info");
+        return NULL;
+    }
+
+    root = cJSON_Parse(docker_info);
+    free(docker_info);
+
+    if (!root || !cJSON_IsArray(root)) {
+        log_error("Docker response is not an array");
+        cJSON_Delete(root);
+        return NULL;
+    }
+
+    char ip_string[INET6_ADDRSTRLEN];
+    if (!inet_ntop(
+            AF_INET,
+            &((const struct sockaddr_in *)peer_addr)->sin_addr,
+            ip_string,
+            sizeof(ip_string)
+        )) {
+        cJSON_Delete(root);
+        return NULL;
+    }
+
+    cJSON *container;
+    cJSON *matched_container = NULL;
+    cJSON_ArrayForEach(container, root) {
+        cJSON *network_settings = cJSON_GetObjectItem(container, "NetworkSettings");
+        cJSON *networks = cJSON_GetObjectItem(network_settings, "Networks");
+        cJSON *ctfwatch_network = cJSON_GetObjectItem(networks, CTFWATCH_NETWORK);
+        cJSON *ip = cJSON_GetObjectItem(ctfwatch_network, "IPAddress");
+
+        if (cJSON_IsString(ip) && strcmp(ip->valuestring, ip_string) == 0) {
+            matched_container = container;
+            break;
+        }
+    }
+
+    if (matched_container)
+        profile = profile_build_from_container(matched_container);
+    else
+        log_warn("Could not map %s to a container", ip_string);
+
+    if (profile) {
+        profile->ip_addr = *peer_addr;
+        profile->ip_addr_len = peer_addr_len;
+    }
+
+    cJSON_Delete(root);
+    return profile;
 }
 
 void profile_destroy(container_profile_t *profile) {

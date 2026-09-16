@@ -10,6 +10,7 @@ SRC = src/main.c \
       src/protocol.c \
       src/profile.c \
       src/docker.c \
+      src/docker_monitor.c \
       src/event.c \
       src/queue.c \
       src/forwarder.c \

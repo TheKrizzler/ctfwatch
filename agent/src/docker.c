@@ -1,7 +1,9 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include <curl/curl.h>
 
+#include "cJSON.h"
 #include "log.h"
 #include "docker.h"
 
@@ -85,4 +87,45 @@ char *get_docker_info(void) {
     curl_easy_cleanup(curl);
     
     return res.data;
+}
+
+char *get_docker_container_info(const char *container_id) {
+    CURL *curl = curl_easy_init();
+    if (!curl)
+        return NULL;
+
+    response_t res = {0};
+    char url[256];
+    snprintf(url, sizeof(url), "http://localhost/containers/%s/json", container_id);
+
+    curl_easy_setopt(curl, CURLOPT_UNIX_SOCKET_PATH, DOCKER_SOCK);
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &res);
+    curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
+
+    if (curl_easy_perform(curl) != CURLE_OK) {
+        free(res.data);
+        res.data = NULL;
+    }
+
+    curl_easy_cleanup(curl);
+    return res.data;
+}
+
+int docker_container_is_tty(const char *container_id) {
+    char *info = get_docker_container_info(container_id);
+    if (!info)
+        return 0;
+
+    cJSON *root = cJSON_Parse(info);
+    free(info);
+    if (!root)
+        return 0;
+
+    cJSON *config = cJSON_GetObjectItem(root, "Config");
+    cJSON *tty = cJSON_GetObjectItem(config, "Tty");
+    int result = cJSON_IsTrue(tty);
+    cJSON_Delete(root);
+    return result;
 }
