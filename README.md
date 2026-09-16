@@ -8,17 +8,17 @@ The project consists of 3 central parts: the central server, the agent, and a py
 
 ## Server
 
-This central component is a containerized Python Flask server which handles forwarded logs from the agents. These logs are already parsed and delivered as ECS. The server only accepts incoming API requests which are authenticated with a token only agents know.
+This central component is a containerized web server which handles forwarded logs from the agents. These logs are already parsed and delivered as ECS. The server only accepts incoming API requests which are authenticated with a token only agents know. 
 
 Setup:
 ```sh
 $ cd ./server
-$ ./setup.sh
+$ docker compose up --build
 ```
 
 ## Agent
 
-One agent runs on each host and retrieves logs from all logging challenges. Communication from logger to agent goes over TCP through the docker network 'ctfwatch-net' on port 9494. 
+One agent runs on each host and retrieves logs from all logging challenges. Communication from logger to agent goes over TCP through the docker network 'ctfwatch-net' on port 9494, and the agent POSTs logs to the server over https.
 
 Setup:
 ```sh
@@ -28,7 +28,7 @@ $ ./setup.sh
 
 ## Logger
 
-The logger component is a lightweight Python library which seamlessly integrates with most Python scripts. Allows for registering events without the need for unreliable text parsing.
+The logger component is a lightweight Python library which seamlessly integrates with most Python scripts. Allows for registering events without the need for unreliable text parsing. This component depends on a running agent, and the logging challenge must be in the 'ctfwatch-net' docker network.
 
 Setup:
 ```sh
