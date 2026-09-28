@@ -1,13 +1,26 @@
 services:
   server:
     build: .
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     environment:
       DATABASE_URL: postgresql://ctfwatch:ctfwatch@postgres:5432/ctfwatch
     depends_on:
       postgres:
         condition: service_healthy
+
+  caddy:
+    image: caddy:2
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - server
 
   postgres:
     image: postgres:17
@@ -23,5 +36,21 @@ services:
       timeout: 5s
       retries: 10
 
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: 123
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   postgres-data:
+  caddy-data:
+  caddy-config:
+  grafana-data:

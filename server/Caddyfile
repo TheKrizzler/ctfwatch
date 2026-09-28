@@ -1,0 +1,4 @@
+fuckweb.lol {
+    tls /etc/letsencrypt/live/fuckweb.lol/fullchain.pem /etc/letsencrypt/live/fuckweb.lol/privkey.pem
+    reverse_proxy server:8000
+}
