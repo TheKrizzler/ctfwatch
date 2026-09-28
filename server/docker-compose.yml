@@ -4,7 +4,9 @@ services:
     expose:
       - "8000"
     environment:
-      DATABASE_URL: postgresql://ctfwatch:ctfwatch@postgres:5432/ctfwatch
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      CTFWATCH_ADMIN_USERNAME: ${CTFWATCH_ADMIN_USERNAME}
+      CTFWATCH_ADMIN_PASSWORD_HASH: ${CTFWATCH_ADMIN_PASSWORD_HASH}
     depends_on:
       postgres:
         condition: service_healthy
@@ -25,9 +27,9 @@ services:
   postgres:
     image: postgres:17
     environment:
-      POSTGRES_DB: ctfwatch
-      POSTGRES_USER: ctfwatch
-      POSTGRES_PASSWORD: ctfwatch
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -41,8 +43,8 @@ services:
     ports:
       - "3000:3000"
     environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: 123
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USERNAME}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
     volumes:
       - grafana-data:/var/lib/grafana
     depends_on:

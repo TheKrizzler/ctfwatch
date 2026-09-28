@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
+import Login from "./Login";
 
 export default function App() {
+    const [user, setUser] = useState(null);
+    const [checkingAuth, setCheckingAuth] = useState(true);
+
     const [events, setEvents] = useState([]);
     const [query, setQuery] = useState("");
     const [container, setContainer] = useState("");
@@ -8,7 +12,29 @@ export default function App() {
     const [selected, setSelected] = useState(null);
     const [loading, setLoading] = useState(false);
 
+    useEffect(() => {
+        async function checkAuth() {
+            try {
+                const response = await fetch("/api/v1/auth/me");
+
+                if (response.ok) {
+                    const body = await response.json();
+                    setUser(body);
+                }
+            } catch {
+                setUser(null);
+            } finally {
+                setCheckingAuth(false);
+            }
+        }
+
+        checkAuth();
+    }, []);
+
     async function loadEvents() {
+        if (!user)
+            return;
+
         setLoading(true);
 
         const params = new URLSearchParams({
@@ -27,6 +53,16 @@ export default function App() {
                 `/api/v1/events?${params}`
             );
 
+            if (response.status === 401) {
+                setUser(null);
+                setEvents([]);
+                return;
+            }
+
+            if (!response.ok) {
+                return;
+            }
+
             const body = await response.json();
             setEvents(body.events ?? []);
         } finally {
@@ -35,8 +71,21 @@ export default function App() {
     }
 
     useEffect(() => {
-        loadEvents();
-    }, [minutes, container]);
+        if (user)
+            loadEvents();
+    }, [user, minutes, container]);
+
+    async function logout() {
+        try {
+            await fetch("/api/v1/auth/logout", {
+                method: "POST",
+            });
+        } finally {
+            setUser(null);
+            setEvents([]);
+            setSelected(null);
+        }
+    }
 
     function submit(event) {
         event.preventDefault();
@@ -66,6 +115,20 @@ export default function App() {
         return "—";
     }
 
+    if (checkingAuth) {
+        return (
+            <main>
+                <div className="empty">
+                    Loading...
+                </div>
+            </main>
+        );
+    }
+
+    if (!user) {
+        return <Login onLogin={setUser} />;
+    }
+
     return (
         <main>
             <header>
@@ -74,9 +137,17 @@ export default function App() {
                     <span>Log Explorer</span>
                 </div>
 
-                <button onClick={loadEvents}>
-                    {loading ? "Loading..." : "Refresh"}
-                </button>
+                <div className="header-actions">
+                    <span>{user.username}</span>
+
+                    <button onClick={loadEvents}>
+                        {loading ? "Loading..." : "Refresh"}
+                    </button>
+
+                    <button onClick={logout}>
+                        Logout
+                    </button>
+                </div>
             </header>
 
             <form className="toolbar" onSubmit={submit}>

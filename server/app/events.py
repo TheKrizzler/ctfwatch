@@ -1,12 +1,15 @@
 import json
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Depends
 
+from .user_auth import authenticate_user
 from .db import get_connection
 
 
-router = APIRouter(prefix="/api/v1/events")
-
+router = APIRouter(
+    prefix="/api/v1/events",
+    dependencies=[Depends(authenticate_user)],
+)
 
 @router.get("")
 def get_events(
