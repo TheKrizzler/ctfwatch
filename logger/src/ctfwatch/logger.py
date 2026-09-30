@@ -211,15 +211,21 @@ def debug(msg):
 def log_to_ecs(properties: dict):
     ecs_output = {}
 
-    for key,value in properties.items():
+    for key, value in properties.items():
         if key in ECS_FIELDS:
             path = ECS_FIELDS[key].split('.')
         else:
-            path = (key, )
+            path = (key,)
+
+        if isinstance(value, (bytes, bytearray)):
+            value = value.hex()
+            path = ("bytes", *path)
 
         current = ecs_output
-        for key in path[:-1]:
-            current = current.setdefault(key, {})
+
+        for part in path[:-1]:
+            current = current.setdefault(part, {})
+
         current[path[-1]] = value
 
     debug(f"ECS TRANSLATION : {ecs_output}")
