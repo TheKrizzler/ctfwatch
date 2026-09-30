@@ -1,7 +1,7 @@
 fuckweb.lol {
     tls /etc/letsencrypt/live/fuckweb.lol/fullchain.pem /etc/letsencrypt/live/fuckweb.lol/privkey.pem
 
-    handle_path /grafana/* {
+    handle /grafana/* {
         reverse_proxy grafana:3000
     }
 
